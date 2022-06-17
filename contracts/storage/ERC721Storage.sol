@@ -4,9 +4,10 @@ pragma solidity ^0.8.10;
 
 import "../utils/Ownable.sol";
 import "../utils/Address.sol";
+import "../utils/ERC165.sol";
 import "../utils/Initializable.sol";
 
-abstract contract ERC721Storage is Initializable, Ownable {
+abstract contract ERC721Storage is Initializable, Ownable, ERC165 {
     using Address for address;
 
     address internal _implementationAddress;

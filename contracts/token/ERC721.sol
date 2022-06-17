@@ -5,17 +5,23 @@ pragma solidity ^0.8.10;
 import "../interfaces/IERC721.sol";
 import "../interfaces/IERC721Enumerable.sol";
 import "../interfaces/IERC721Metadata.sol";
+import "../interfaces/IERC721Receiver.sol";
+import "../utils/Address.sol";
 import "../storage/ERC721Storage.sol";
 
 contract ERC721 is IERC721, IERC721Metadata, ERC721Storage {
-
-    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
-    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    using Address for address;
 
     modifier onlyTokenOwner(uint tokenId) {
         require(msg.sender == ownerOf(tokenId), "ERC721: msg sender is not an owner of token");
         _;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     function initialize(string memory name_, string memory symbol_) external initializer {
@@ -23,15 +29,15 @@ contract ERC721 is IERC721, IERC721Metadata, ERC721Storage {
         _symbol = symbol_;
     }
 
-    function name() external view virtual override returns (string memory) {
+    function name() external view returns (string memory) {
         return _name;
     }
 
-    function symbol() external view virtual override returns (string memory) {
+    function symbol() external view returns (string memory) {
         return _symbol;
     }
         
-    function uri(uint id) external view virtual override returns (string memory) {
+    function tokenURI(uint id) external view returns (string memory) {
         return _uris[id];
     }
 
@@ -90,7 +96,15 @@ contract ERC721 is IERC721, IERC721Metadata, ERC721Storage {
         _safeTransfer(from, to, tokenId);
     }
 
-
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) public virtual override {
+        require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: caller is not token owner nor approved");
+        _safeTransfer(from, to, tokenId, data);
+    }
 
     function safeMint(address to, uint tokenId) external onlyOwner {
         _mint(to, tokenId);
@@ -157,6 +171,40 @@ contract ERC721 is IERC721, IERC721Metadata, ERC721Storage {
 
     function _safeTransfer(address from, address to, uint tokenId) internal virtual {
         _transfer(from, to, tokenId);
+    }
+
+    function _safeTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) internal virtual {
+        _transfer(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, data), "ERC721: transfer to non ERC721Receiver implementer");
+    }
+
+    function _checkOnERC721Received(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) private returns (bool) {
+        if (to.isContract()) {
+            try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
+                return retval == IERC721Receiver.onERC721Received.selector;
+            } catch (bytes memory reason) {
+                if (reason.length == 0) {
+                    revert("ERC721: transfer to non ERC721Receiver implementer");
+                } else {
+                    /// @solidity memory-safe-assembly
+                    assembly {
+                        revert(add(32, reason), mload(reason))
+                    }
+                }
+            }
+        } else {
+            return true;
+        }
     }
 
     function _beforeTokenTransfer(address from, address to, uint tokenId) internal virtual {
