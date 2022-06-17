@@ -1,13 +1,14 @@
 //SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import "../storage/P2PStorage.sol";
-import "../interfaces/IBEP721Receiver.sol";
-import "../interfaces/IBEP1155.sol";
-import "../interfaces/IBEP721.sol";
+import "../interfaces/IERC721Receiver.sol";
+import "../utils/ERC1155Holder.sol";
+import "../interfaces/IERC1155.sol";
+import "../interfaces/IERC721.sol";
 
-contract P2P is P2PStorage, IBEP721Receiver {    
+contract P2P is P2PStorage, IERC721Receiver, ERC1155Holder {    
 
     event NewTradeSingle(address indexed user, address indexed proposedAsset, uint proposedAmount, uint proposedTokenId, address indexed askedAsset, uint askedAmount, uint askedTokenId, uint deadline, uint tradeId);
     event NewTradeMulti(address indexed user, address[] proposedAssets, uint proposedAmount, uint[] proposedIds, address[] askedAssets, uint askedAmount, uint[] askedIds, uint deadline, uint indexed tradeId);
@@ -23,109 +24,109 @@ contract P2P is P2PStorage, IBEP721Receiver {
     }
     
     modifier lock() {
-        require(unlocked == 1, 'SnakeP2P: locked');
+        require(unlocked == 1, 'P2P: locked');
         unlocked = 0;
         _;
         unlocked = 1;
     }
 
     function createTrade20To20(address proposedAsset, uint proposedAmount, address askedAsset, uint askedAmount, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset) && Address.isContract(askedAsset), "SnakeP2P: Not contracts");
-        require(proposedAmount > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(proposedAsset) && Address.isContract(askedAsset), "P2P: Not contracts");
+        require(proposedAmount > 0, "P2P: Zero amount not allowed");
         TransferHelper.safeTransferFrom(proposedAsset, msg.sender, address(this), proposedAmount);
-        tradeId = _createTradeSingle(proposedAsset, proposedAmount, 0, askedAsset, askedAmount, 0, deadline, AssetType.BEP20, AssetType.BEP20);   
+        tradeId = _createTradeSingle(proposedAsset, proposedAmount, 0, askedAsset, askedAmount, 0, deadline, AssetType.ERC20, AssetType.ERC20);   
     }
 
-    // for trade BEP20 -> Native Coin use createTradeBEP20ToBEP20 and pass WBNB address as asked asset
+    // for trade ERC20 -> Native Coin use createTradeERC20ToERC20 and pass WBNB address as asked asset
     function createTradeBNBto20(address askedAsset, uint askedAmount, uint deadline) payable external returns (uint tradeId) {
-        require(Address.isContract(askedAsset), "SnakeP2P: Not contract");
-        require(msg.value > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(askedAsset), "P2P: Not contract");
+        require(msg.value > 0, "P2P: Zero amount not allowed");
         WBNB.deposit{value: msg.value}();
-        tradeId = _createTradeSingle(address(WBNB), msg.value, 0, askedAsset, askedAmount, 0, deadline, AssetType.BEP20, AssetType.BEP20);   
+        tradeId = _createTradeSingle(address(WBNB), msg.value, 0, askedAsset, askedAmount, 0, deadline, AssetType.ERC20, AssetType.ERC20);   
     }
 
 
 
     function createTrade20To721(address proposedAsset, uint proposedAmount, address askedAsset, uint tokenId, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset), "SnakeP2P: Not contracts");
-        require(proposedAmount > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(proposedAsset), "P2P: Not contracts");
+        require(proposedAmount > 0, "P2P: Zero amount not allowed");
         _requireAllowed721Or1155(askedAsset);
         TransferHelper.safeTransferFrom(proposedAsset, msg.sender, address(this), proposedAmount);
-        tradeId = _createTradeSingle(proposedAsset, proposedAmount, 0, askedAsset, 0, tokenId, deadline, AssetType.BEP20, AssetType.BEP721);   
+        tradeId = _createTradeSingle(proposedAsset, proposedAmount, 0, askedAsset, 0, tokenId, deadline, AssetType.ERC20, AssetType.ERC721);   
     }
 
-    // for trade NFT -> Native Coin use createTradeNFTtoBEP20 and pass WBNB address as asked asset
+    // for trade NFT -> Native Coin use createTradeNFTtoERC20 and pass WBNB address as asked asset
     function createTrade721to20(address proposedAsset, uint tokenId, address askedAsset, uint askedAmount, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset), "SnakeP2P: Not contracts");
+        require(Address.isContract(proposedAsset), "P2P: Not contracts");
         _requireAllowed721Or1155(proposedAsset);
-        IBEP721(proposedAsset).safeTransferFrom(msg.sender, address(this), tokenId);
-        tradeId = _createTradeSingle(proposedAsset, 0, tokenId, askedAsset, askedAmount, 0, deadline, AssetType.BEP721, AssetType.BEP20);   
+        IERC721(proposedAsset).safeTransferFrom(msg.sender, address(this), tokenId);
+        tradeId = _createTradeSingle(proposedAsset, 0, tokenId, askedAsset, askedAmount, 0, deadline, AssetType.ERC721, AssetType.ERC20);   
     }
 
     function createTradeBNBto721(address askedAsset, uint tokenId, uint deadline) payable external returns (uint tradeId) {
-        require(Address.isContract(askedAsset), "SnakeP2P: Not contract");
-        require(msg.value > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(askedAsset), "P2P: Not contract");
+        require(msg.value > 0, "P2P: Zero amount not allowed");
         _requireAllowed721Or1155(askedAsset);
         WBNB.deposit{value: msg.value}();
-        tradeId = _createTradeSingle(address(WBNB), msg.value, 0, askedAsset, 0, tokenId, deadline, AssetType.BEP20, AssetType.BEP721);   
+        tradeId = _createTradeSingle(address(WBNB), msg.value, 0, askedAsset, 0, tokenId, deadline, AssetType.ERC20, AssetType.ERC721);   
     }
 
 
 
     function createTrade1155to20(address proposedAsset, uint proposedAmount, uint proposedTokenId, address askedAsset, uint askedAmount, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset), "SnakeP2P: Not contracts");
-        require(proposedAmount > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(proposedAsset), "P2P: Not contracts");
+        require(proposedAmount > 0, "P2P: Zero amount not allowed");
         _requireAllowed721Or1155(proposedAsset);
-        IBEP1155(proposedAsset).safeTransferFrom(msg.sender, address(this), proposedTokenId, proposedAmount, "");
-        tradeId = _createTradeSingle(proposedAsset, proposedAmount, proposedTokenId, askedAsset, askedAmount, 0, deadline, AssetType.BEP1155, AssetType.BEP20);   
+        IERC1155(proposedAsset).safeTransferFrom(msg.sender, address(this), proposedTokenId, proposedAmount, "");
+        tradeId = _createTradeSingle(proposedAsset, proposedAmount, proposedTokenId, askedAsset, askedAmount, 0, deadline, AssetType.ERC1155, AssetType.ERC20);   
     }
 
     function createTrade20To1155(address proposedAsset, uint proposedAmount, address askedAsset, uint tokenId, uint askedAmount, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset), "SnakeP2P: Not contracts");
-        require(proposedAmount > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(proposedAsset), "P2P: Not contracts");
+        require(proposedAmount > 0, "P2P: Zero amount not allowed");
         _requireAllowed721Or1155(askedAsset);
         TransferHelper.safeTransferFrom(proposedAsset, msg.sender, address(this), proposedAmount);
-        tradeId = _createTradeSingle(proposedAsset, proposedAmount, 0, askedAsset, askedAmount, tokenId, deadline, AssetType.BEP20, AssetType.BEP1155);   
+        tradeId = _createTradeSingle(proposedAsset, proposedAmount, 0, askedAsset, askedAmount, tokenId, deadline, AssetType.ERC20, AssetType.ERC1155);   
     }
 
     function createTradeBNBto1155(address askedAsset, uint tokenId, uint askedAmount, uint deadline) payable external returns (uint tradeId) {
-        require(Address.isContract(askedAsset), "SnakeP2P: Not contract");
-        require(msg.value > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(askedAsset), "P2P: Not contract");
+        require(msg.value > 0, "P2P: Zero amount not allowed");
         _requireAllowed721Or1155(askedAsset);
         WBNB.deposit{value: msg.value}();
-        tradeId = _createTradeSingle(address(WBNB), msg.value, 0, askedAsset, askedAmount, tokenId, deadline, AssetType.BEP20, AssetType.BEP1155);   
+        tradeId = _createTradeSingle(address(WBNB), msg.value, 0, askedAsset, askedAmount, tokenId, deadline, AssetType.ERC20, AssetType.ERC1155);   
     }
 
 
 
     function createTrade1155To721(address proposedAsset, uint proposedAmount, uint proposedTokenId, address askedAsset, uint tokenId, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset), "SnakeP2P: Not contracts");
-        require(proposedAmount > 0, "SnakeP2P: Zero amount not allowed");
+        require(Address.isContract(proposedAsset), "P2P: Not contracts");
+        require(proposedAmount > 0, "P2P: Zero amount not allowed");
         _requireAllowed721Or1155(askedAsset);
         _requireAllowed721Or1155(proposedAsset);
-        IBEP1155(proposedAsset).safeTransferFrom(msg.sender, address(this), proposedTokenId, proposedAmount, "");
-        tradeId = _createTradeSingle(proposedAsset, proposedAmount, proposedTokenId, askedAsset, 0, tokenId, deadline, AssetType.BEP1155, AssetType.BEP721);   
+        IERC1155(proposedAsset).safeTransferFrom(msg.sender, address(this), proposedTokenId, proposedAmount, "");
+        tradeId = _createTradeSingle(proposedAsset, proposedAmount, proposedTokenId, askedAsset, 0, tokenId, deadline, AssetType.ERC1155, AssetType.ERC721);   
     }
 
     function createTrade721to1155(address proposedAsset, uint proposedTokenId, address askedAsset, uint askedAmount, uint askedTokenId, uint deadline) external returns (uint tradeId) {
-        require(Address.isContract(proposedAsset), "SnakeP2P: Not contracts");
+        require(Address.isContract(proposedAsset), "P2P: Not contracts");
         _requireAllowed721Or1155(askedAsset);
         _requireAllowed721Or1155(proposedAsset);
-        IBEP721(proposedAsset).safeTransferFrom(msg.sender, address(this), proposedTokenId);
-        tradeId = _createTradeSingle(proposedAsset, 0, proposedTokenId, askedAsset, askedAmount, askedTokenId, deadline, AssetType.BEP721, AssetType.BEP1155);   
+        IERC721(proposedAsset).safeTransferFrom(msg.sender, address(this), proposedTokenId);
+        tradeId = _createTradeSingle(proposedAsset, 0, proposedTokenId, askedAsset, askedAmount, askedTokenId, deadline, AssetType.ERC721, AssetType.ERC1155);   
     }
 
 
 
     function supportTradeSingle(uint tradeId) external lock {
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
         TradeSingle storage trade = tradesSingle[tradeId];
-        require(trade.status == 0 && trade.deadline > block.timestamp, "SnakeP2P: Not active trade");
+        require(trade.status == 0 && trade.deadline > block.timestamp, "P2P: Not active trade");
 
-        if (trade.askedAssetType == AssetType.BEP721) {
-            IBEP721(trade.askedAsset).safeTransferFrom(msg.sender, trade.initiator, trade.askedTokenId);
-        } else if (trade.askedAssetType == AssetType.BEP1155) {
-            IBEP1155(trade.askedAsset).safeTransferFrom(msg.sender, trade.initiator, trade.askedTokenId, trade.askedAmount, "");
+        if (trade.askedAssetType == AssetType.ERC721) {
+            IERC721(trade.askedAsset).safeTransferFrom(msg.sender, trade.initiator, trade.askedTokenId);
+        } else if (trade.askedAssetType == AssetType.ERC1155) {
+            IERC1155(trade.askedAsset).safeTransferFrom(msg.sender, trade.initiator, trade.askedTokenId, trade.askedAmount, "");
         } else {
             TransferHelper.safeTransferFrom(trade.askedAsset, msg.sender, trade.initiator, trade.askedAmount);
         }
@@ -133,11 +134,11 @@ contract P2P is P2PStorage, IBEP721Receiver {
     }
 
     function supportTradeSingleBNB(uint tradeId) payable external lock {
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
         TradeSingle storage trade = tradesSingle[tradeId];
-        require(trade.status == 0 && trade.deadline > block.timestamp, "SnakeP2P: Not active trade");
-        require(msg.value >= trade.askedAmount, "SnakeP2P: Not enough BNB sent");
-        require(trade.askedAsset == address(WBNB), "SnakeP2P: BEP20 trade");
+        require(trade.status == 0 && trade.deadline > block.timestamp, "P2P: Not active trade");
+        require(msg.value >= trade.askedAmount, "P2P: Not enough BNB sent");
+        require(trade.askedAsset == address(WBNB), "P2P: ERC20 trade");
 
         TransferHelper.safeTransferBNB(trade.initiator, trade.askedAmount);
         if (msg.value > trade.askedAmount) TransferHelper.safeTransferBNB(msg.sender, msg.value - trade.askedAmount);
@@ -147,9 +148,9 @@ contract P2P is P2PStorage, IBEP721Receiver {
 
 
     function cancelTrade(uint tradeId) external lock { 
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
-        require(tradesSingle[tradeId].initiator == msg.sender, "SnakeP2P: Not allowed");
-        require(tradesSingle[tradeId].status == 0 && tradesSingle[tradeId].deadline > block.timestamp, "SnakeP2P: Not active trade");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
+        require(tradesSingle[tradeId].initiator == msg.sender, "P2P: Not allowed");
+        require(tradesSingle[tradeId].status == 0 && tradesSingle[tradeId].deadline > block.timestamp, "P2P: Not active trade");
         
         _cancelTradeOrWithdrawOverdueAssets(tradeId);
         
@@ -158,9 +159,9 @@ contract P2P is P2PStorage, IBEP721Receiver {
     }
 
     function cancelTradeOrWithdrawOverdueAssets(uint tradeId) external lock { 
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
-        require(tradesSingle[tradeId].initiator == msg.sender, "SnakeP2P: Not allowed");
-        require(tradesSingle[tradeId].status == 0, "SnakeP2P: Not active trade");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
+        require(tradesSingle[tradeId].initiator == msg.sender, "P2P: Not allowed");
+        require(tradesSingle[tradeId].status == 0, "P2P: Not active trade");
         
         _cancelTradeOrWithdrawOverdueAssets(tradeId);
 
@@ -171,10 +172,10 @@ contract P2P is P2PStorage, IBEP721Receiver {
 
 
     function withdrawOverdueAssetSingle(uint tradeId) external lock { 
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
         TradeSingle storage trade = tradesSingle[tradeId];
-        require(trade.initiator == msg.sender, "SnakeP2P: Not allowed");
-        require(trade.status == 0 && trade.deadline < block.timestamp, "SnakeP2P: Not available for withdrawal");
+        require(trade.initiator == msg.sender, "P2P: Not allowed");
+        require(trade.status == 0 && trade.deadline < block.timestamp, "P2P: Not available for withdrawal");
 
         _cancelTradeOrWithdrawOverdueAssets(tradeId);
 
@@ -184,12 +185,12 @@ contract P2P is P2PStorage, IBEP721Receiver {
     
 
 
-    function onBEP721Received(address operator, address from, uint tokenId, bytes memory data) external pure returns (bytes4) {
+    function onERC721Received(address operator, address from, uint tokenId, bytes memory data) external pure returns (bytes4) {
         return 0x150b7a02;
     }
 
     function state(uint tradeId) public view returns (TradeState) { //TODO
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
         TradeSingle storage trade = tradesSingle[tradeId];
         if (trade.status == 1) {
             return TradeState.Succeeded;
@@ -207,7 +208,7 @@ contract P2P is P2PStorage, IBEP721Receiver {
     }
 
     function _requireAllowed721Or1155(address nftContract) private view {
-        require(isAnyNFTAllowed || allowedNFT[nftContract], "SnakeP2P: Not allowed NFT");
+        require(isAnyNFTAllowed || allowedNFT[nftContract], "P2P: Not allowed NFT");
     }
 
     function _createTradeSingle(
@@ -221,8 +222,8 @@ contract P2P is P2PStorage, IBEP721Receiver {
         AssetType proposedAssetType,
         AssetType askedAssetType
     ) private returns (uint tradeId) { 
-        require(askedAsset != proposedAsset, "SnakeP2P: Asked asset can not be equal to proposed asset");
-        require(deadline > block.timestamp, "SnakeP2P: Incorrect deadline");
+        require(askedAsset != proposedAsset, "P2P: Asked asset can not be equal to proposed asset");
+        require(deadline > block.timestamp, "P2P: Incorrect deadline");
         tradeId = ++tradeCount;
         
         TradeSingle storage trade = tradesSingle[tradeId];
@@ -244,10 +245,10 @@ contract P2P is P2PStorage, IBEP721Receiver {
     function _supportTradeSingle(uint tradeId) private { 
         TradeSingle memory trade = tradesSingle[tradeId];
         
-        if (trade.proposedAssetType == AssetType.BEP721) {
-            IBEP721(trade.proposedAsset).transferFrom(address(this), msg.sender, trade.proposedTokenId);
-        } else if (trade.proposedAssetType == AssetType.BEP1155) {
-            IBEP1155(trade.proposedAsset).safeTransferFrom(address(this), msg.sender, trade.proposedTokenId, trade.proposedAmount, "");
+        if (trade.proposedAssetType == AssetType.ERC721) {
+            IERC721(trade.proposedAsset).transferFrom(address(this), msg.sender, trade.proposedTokenId);
+        } else if (trade.proposedAssetType == AssetType.ERC1155) {
+            IERC1155(trade.proposedAsset).safeTransferFrom(address(this), msg.sender, trade.proposedTokenId, trade.proposedAmount, "");
         } else if (trade.proposedAsset != address(WBNB)) {
             TransferHelper.safeTransfer(trade.proposedAsset, msg.sender, trade.proposedAmount);
         } else {
@@ -263,10 +264,10 @@ contract P2P is P2PStorage, IBEP721Receiver {
     function _cancelTradeOrWithdrawOverdueAssets(uint tradeId) internal { 
         TradeSingle memory trade = tradesSingle[tradeId];
 
-        if (trade.proposedAssetType == AssetType.BEP721) {
-            IBEP721(trade.proposedAsset).transferFrom(address(this), trade.initiator, trade.proposedTokenId);
-        } else if (trade.proposedAssetType == AssetType.BEP1155) {
-            IBEP1155(trade.proposedAsset).safeTransferFrom(address(this), trade.initiator, trade.proposedTokenId, trade.proposedAmount, "");
+        if (trade.proposedAssetType == AssetType.ERC721) {
+            IERC721(trade.proposedAsset).transferFrom(address(this), trade.initiator, trade.proposedTokenId);
+        } else if (trade.proposedAssetType == AssetType.ERC1155) {
+            IERC1155(trade.proposedAsset).safeTransferFrom(address(this), trade.initiator, trade.proposedTokenId, trade.proposedAmount, "");
         } else if (trade.proposedAsset != address(WBNB)) {
             TransferHelper.safeTransfer(trade.proposedAsset, trade.initiator, trade.proposedAmount);
         } else {
@@ -278,8 +279,8 @@ contract P2P is P2PStorage, IBEP721Receiver {
 
 
     function cancelTradeOrWithdrawOverdueAssetsFor(uint tradeId) external lock onlyOwner { 
-        require(tradeCount >= tradeId && tradeId > 0, "SnakeP2P: Invalid trade id");
-        require(tradesSingle[tradeId].status == 0, "SnakeP2P: Not active trade");
+        require(tradeCount >= tradeId && tradeId > 0, "P2P: Invalid trade id");
+        require(tradesSingle[tradeId].status == 0, "P2P: Not active trade");
         
         _cancelTradeOrWithdrawOverdueAssets(tradeId);
         
@@ -293,7 +294,7 @@ contract P2P is P2PStorage, IBEP721Receiver {
     }
 
     function updateAllowedNFT(address nft, bool isAllowed) external onlyOwner {
-        require(Address.isContract(nft), "SnakeP2P: Not a contract");
+        require(Address.isContract(nft), "P2P: Not a contract");
         allowedNFT[nft] = isAllowed;
         emit UpdateAllowedNFT(nft, isAllowed);
     }

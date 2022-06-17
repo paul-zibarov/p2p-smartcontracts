@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 
 import "../utils/Proxy.sol";
@@ -24,7 +24,7 @@ contract P2PProxy is Proxy, P2PStorage {
     }
 
     function replaceImplementation(address newTarget) external onlyOwner {
-        require(newTarget != address(0), "SnakeArtifactsNFTProxy: target's address is equal to zero address");
+        require(newTarget != address(0), "ArtifactsNFTProxy: target's address is equal to zero address");
         version += 1;
         address oldTarget = _implementationAddress;
         _implementationAddress = newTarget;

@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-import "./BEP721.sol";
-import "../interfaces/IBEP721Enumerable.sol";
+import "./ERC721.sol";
+import "../interfaces/IERC721Enumerable.sol";
 
-contract BEP721Enumerable is IBEP721Enumerable, BEP721 {
+contract ERC721Enumerable is IERC721Enumerable, ERC721 {
 
     function userTokens(address owner) external view virtual returns (uint[] memory) {
-        require(owner != address(0), "SnakesNFT: balance query for the zero address");
+        require(owner != address(0), "sNFT: balance query for the zero address");
         uint balance = super.balanceOf(owner);
         uint[] memory result = new uint[](balance);
         for (uint i; i < balance; i++) {
@@ -18,7 +18,7 @@ contract BEP721Enumerable is IBEP721Enumerable, BEP721 {
     }
 
     function tokenOfOwnerByIndex(address owner, uint index) public view virtual override returns (uint) {
-        require(index < super.balanceOf(owner), "SnakesNFT: owner index out of bounds");
+        require(index < super.balanceOf(owner), "sNFT: owner index out of bounds");
         return _ownedTokens[owner][index];
     }
 
@@ -27,7 +27,7 @@ contract BEP721Enumerable is IBEP721Enumerable, BEP721 {
     }
 
     function tokenByIndex(uint index) public view virtual override returns (uint) {
-        require(index < totalSupply(), "BEP721Enumerable: global index out of bounds");
+        require(index < totalSupply(), "ERC721Enumerable: global index out of bounds");
         return _allTokens[index];
     }
 

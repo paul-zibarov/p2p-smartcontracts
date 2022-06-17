@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 
 /**
- * @dev Required interface of an BEP1155 compliant contract, as defined in the
+ * @dev Required interface of an ERC1155 compliant contract, as defined in the
  * https://eips.ethereum.org/EIPS/eip-1155[EIP].
  *
  * _Available since v3.1._
  */
-interface IBEP1155 {
+interface IERC1155 {
     /**
      * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
      */
@@ -38,7 +38,7 @@ interface IBEP1155 {
      *
      * If an {URI} event was emitted for `id`, the standard
      * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
-     * returned by {IBEP1155MetadataURI-uri}.
+     * returned by {IERC1155MetadataURI-uri}.
      */
     event URI(string value, uint indexed id);
 
@@ -91,7 +91,7 @@ interface IBEP1155 {
      * - `to` cannot be the zero address.
      * - If the caller is not `from`, it must be have been approved to spend ``from``'s tokens via {setApprovalForAll}.
      * - `from` must have a balance of tokens of type `id` of at least `amount`.
-     * - If `to` refers to a smart contract, it must implement {IBEP1155Receiver-onBEP1155Received} and return the
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      * acceptance magic value.
      */
     function safeTransferFrom(
@@ -110,7 +110,7 @@ interface IBEP1155 {
      * Requirements:
      *
      * - `ids` and `amounts` must have the same length.
-     * - If `to` refers to a smart contract, it must implement {IBEP1155Receiver-onBEP1155BatchReceived} and return the
+     * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
      * acceptance magic value.
      */
     function safeBatchTransferFrom(

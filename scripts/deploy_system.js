@@ -4,43 +4,43 @@ const hre = require("hardhat");
 const fs = require('fs');
 
 async function main() {
-  await deployBEP721("BEP721 Token", "T721");
-  await deployBEP1155("BEP1155 Token", "T1155");
-  await deployBEP20("BEP20 Token", "T20", "18", "1000000000000000000000000000");
+  await deployERC721("ERC721 Token", "T721");
+  await deployERC1155("ERC1155 Token", "T1155");
+  await deployERC20("ERC20 Token", "T20", "18", "1000000000000000000000000000");
   await deployP2P();
 }
 
-async function deployBEP721(name, symbol) {
-  const BEP721 = await hre.ethers.getContractFactory("BEP721Enumerable");
-  let token = await BEP721.deploy();
-  console.log("BEP721 Implementation address:", token.address);
+async function deployERC721(name, symbol) {
+  const ERC721 = await hre.ethers.getContractFactory("ERC721Enumerable");
+  let token = await ERC721.deploy();
+  console.log("ERC721 Implementation address:", token.address);
 
-  const BEP721Proxy = await hre.ethers.getContractFactory("BEP721Proxy");
-  const tokenProxy = await BEP721Proxy.deploy(token.address);
-  console.log("BEP721 Proxy address:", tokenProxy.address);
+  const ERC721Proxy = await hre.ethers.getContractFactory("ERC721Proxy");
+  const tokenProxy = await ERC721Proxy.deploy(token.address);
+  console.log("ERC721 Proxy address:", tokenProxy.address);
 
-  token = await BEP721.attach(tokenProxy.address);
+  token = await ERC721.attach(tokenProxy.address);
   token.initialize(name, symbol)
 
 }
 
-async function deployBEP1155(name, symbol) {
-  const BEP1155 = await hre.ethers.getContractFactory("BEP1155");
-  let token = await BEP1155.deploy();
-  console.log("BEP1155 Implementation address:", token.address);
+async function deployERC1155(name, symbol) {
+  const ERC1155 = await hre.ethers.getContractFactory("ERC1155");
+  let token = await ERC1155.deploy();
+  console.log("ERC1155 Implementation address:", token.address);
 
-  const BEP1155Proxy = await hre.ethers.getContractFactory("BEP1155Proxy");
-  const tokenProxy = await BEP1155Proxy.deploy(token.address);
-  console.log("BEP1155 Proxy address:", tokenProxy.address);
+  const ERC1155Proxy = await hre.ethers.getContractFactory("ERC1155Proxy");
+  const tokenProxy = await ERC1155Proxy.deploy(token.address);
+  console.log("ERC1155 Proxy address:", tokenProxy.address);
 
-  token = await BEP1155.attach(tokenProxy.address);
+  token = await ERC1155.attach(tokenProxy.address);
   await token.initialize(name, symbol);
 }
 
-async function deployBEP20(name, symbol, decimals, totalSupply) {
-  const BEP20 = await hre.ethers.getContractFactory("BEP20");
-  let token = await BEP20.deploy(name, symbol, decimals, totalSupply);
-  console.log("BEP20 address:", token.address);
+async function deployERC20(name, symbol, decimals, totalSupply) {
+  const ERC20 = await hre.ethers.getContractFactory("ERC20");
+  let token = await ERC20.deploy(name, symbol, decimals, totalSupply);
+  console.log("ERC20 address:", token.address);
 }
 
 async function deployP2P() {

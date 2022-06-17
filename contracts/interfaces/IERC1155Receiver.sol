@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 /**
  * @dev _Available since v3.1._
  */
-interface IBEP1155Receiver {
+interface IERC1155Receiver {
     /**
-        @dev Handles the receipt of a single BEP1155 token type. This function is
+        @dev Handles the receipt of a single ERC1155 token type. This function is
         called at the end of a `safeTransferFrom` after the balance has been updated.
         To accept the transfer, this must return
-        `bytes4(keccak256("onBEP1155Received(address,address,uint,uint,bytes)"))`
+        `bytes4(keccak256("onERC1155Received(address,address,uint,uint,bytes)"))`
         (i.e. 0xf23a6e61, or its own function selector).
         @param operator The address which initiated the transfer (i.e. msg.sender)
         @param from The address which previously owned the token
         @param id The ID of the token being transferred
         @param value The amount of tokens being transferred
         @param data Additional data with no specified format
-        @return `bytes4(keccak256("onBEP1155Received(address,address,uint,uint,bytes)"))` if transfer is allowed
+        @return `bytes4(keccak256("onERC1155Received(address,address,uint,uint,bytes)"))` if transfer is allowed
     */
-    function onBEP1155Received(
+    function onERC1155Received(
         address operator,
         address from,
         uint id,
@@ -28,19 +28,19 @@ interface IBEP1155Receiver {
     ) external returns (bytes4);
 
     /**
-        @dev Handles the receipt of a multiple BEP1155 token types. This function
+        @dev Handles the receipt of a multiple ERC1155 token types. This function
         is called at the end of a `safeBatchTransferFrom` after the balances have
         been updated. To accept the transfer(s), this must return
-        `bytes4(keccak256("onBEP1155BatchReceived(address,address,uint[],uint[],bytes)"))`
+        `bytes4(keccak256("onERC1155BatchReceived(address,address,uint[],uint[],bytes)"))`
         (i.e. 0xbc197c81, or its own function selector).
         @param operator The address which initiated the batch transfer (i.e. msg.sender)
         @param from The address which previously owned the token
         @param ids An array containing ids of each token being transferred (order and length must match values array)
         @param values An array containing amounts of each token being transferred (order and length must match ids array)
         @param data Additional data with no specified format
-        @return `bytes4(keccak256("onBEP1155BatchReceived(address,address,uint[],uint[],bytes)"))` if transfer is allowed
+        @return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint[],uint[],bytes)"))` if transfer is allowed
     */
-    function onBEP1155BatchReceived(
+    function onERC1155BatchReceived(
         address operator,
         address from,
         uint[] calldata ids,

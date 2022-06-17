@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-interface IBEP721 {
+interface IERC721 {
     function balanceOf(address owner) external view returns (uint balance);
     function ownerOf(uint tokenId) external view returns (address owner);
     function safeTransferFrom(address from, address to, uint tokenId) external;

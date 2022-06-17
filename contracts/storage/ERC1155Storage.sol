@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import "../utils/Initializable.sol";
 import "../utils/Address.sol";
 import "../utils/Ownable.sol";
 
-abstract contract BEP1155Storage is Initializable, Ownable {
+abstract contract ERC1155Storage is Initializable, Ownable {
     using Address for address;
 
     address internal _implementationAddress;

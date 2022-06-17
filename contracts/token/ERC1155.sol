@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-import "../interfaces/IBEP1155.sol";
-import "../interfaces/IBEP1155Receiver.sol";
-import "../interfaces/IBEP1155MetadataURI.sol";
-import "../storage/BEP1155Storage.sol";
+import "../interfaces/IERC1155.sol";
+import "../interfaces/IERC1155Receiver.sol";
+import "../interfaces/IERC1155MetadataURI.sol";
+import "../storage/ERC1155Storage.sol";
 
-contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
+contract ERC1155 is IERC1155, IERC1155MetadataURI, ERC1155Storage {
     using Address for address;
 
     function initialize(string memory name_, string memory symbol_) external initializer {
@@ -32,12 +32,12 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     }
 
     function balanceOf(address account, uint id) public view returns (uint) {
-        require(account != address(0), "BEP1155: balance query for the zero address");
+        require(account != address(0), "ERC1155: balance query for the zero address");
         return _balances[id][account];
     }
 
     function balanceOfBatch(address[] memory accounts, uint[] memory ids) public view returns (uint[] memory) {
-        require(accounts.length == ids.length, "BEP1155: accounts and ids length mismatch");
+        require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
 
         uint[] memory batchBalances = new uint[](accounts.length);
 
@@ -60,7 +60,7 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
         _totalSupply[id] = amount;
     }
     function mint(address to, uint id, uint amount, bytes memory data) external onlyOwner {
-        require(to != address(0), "BEP1155: mint to the zero address");
+        require(to != address(0), "ERC1155: mint to the zero address");
 
         address operator = msg.sender;
 
@@ -74,8 +74,8 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     }
 
     function mintBatch(address to, uint[] memory ids, uint[] memory amounts, bytes memory data) external onlyOwner {
-        require(to != address(0), "BEP1155: mint to the zero address");
-        require(ids.length == amounts.length, "BEP1155: ids and amounts length mismatch");
+        require(to != address(0), "ERC1155: mint to the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
 
         address operator = msg.sender;
 
@@ -92,14 +92,14 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     }
 
     function burn(address from, uint id, uint amount) external onlyOwner {
-        require(from != address(0), "BEP1155: burn from the zero address");
+        require(from != address(0), "ERC1155: burn from the zero address");
 
         address operator = msg.sender;
 
         _beforeTokenTransfer(operator, from, address(0), _asSingletonArray(id), _asSingletonArray(amount), "");
 
         uint fromBalance = _balances[id][from];
-        require(fromBalance >= amount, "BEP1155: burn amount exceeds balance");
+        require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
         unchecked {
             _balances[id][from] = fromBalance - amount;
             _totalSupply[id] -= amount;
@@ -109,8 +109,8 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     }
 
     function burnBatch(address from, uint[] memory ids, uint[] memory amounts) external onlyOwner {
-        require(from != address(0), "BEP1155: burn from the zero address");
-        require(ids.length == amounts.length, "BEP1155: ids and amounts length mismatch");
+        require(from != address(0), "ERC1155: burn from the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
 
         address operator = msg.sender;
 
@@ -121,7 +121,7 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
             uint amount = amounts[i];
 
             uint fromBalance = _balances[id][from];
-            require(fromBalance >= amount, "BEP1155: burn amount exceeds balance");
+            require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
             unchecked {
                 _balances[id][from] = fromBalance - amount;
                 _totalSupply[id] -= amount;
@@ -134,7 +134,7 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     function safeTransferFrom(address from, address to, uint id, uint amount, bytes memory data) public {
         require(
             from == msg.sender || isApprovedForAll(from, msg.sender),
-            "BEP1155: caller is not owner nor approved"
+            "ERC1155: caller is not owner nor approved"
         );
         _safeTransferFrom(from, to, id, amount, data);
     }
@@ -142,20 +142,20 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     function safeBatchTransferFrom(address from, address to, uint[] memory ids, uint[] memory amounts, bytes memory data) public {
         require(
             from == msg.sender || isApprovedForAll(from, msg.sender),
-            "BEP1155: transfer caller is not owner nor approved"
+            "ERC1155: transfer caller is not owner nor approved"
         );
         _safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     function _safeTransferFrom(address from, address to, uint id, uint amount, bytes memory data) internal virtual {
-        require(to != address(0), "BEP1155: transfer to the zero address");
+        require(to != address(0), "ERC1155: transfer to the zero address");
 
         address operator = msg.sender;
 
         _beforeTokenTransfer(operator, from, to, _asSingletonArray(id), _asSingletonArray(amount), data);
 
         uint fromBalance = _balances[id][from];
-        require(fromBalance >= amount, "BEP1155: insufficient balance for transfer");
+        require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
         unchecked {
             _balances[id][from] = fromBalance - amount;
         }
@@ -167,8 +167,8 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     }
 
     function _safeBatchTransferFrom(address from, address to, uint[] memory ids, uint[] memory amounts, bytes memory data) internal virtual {
-        require(ids.length == amounts.length, "BEP1155: ids and amounts length mismatch");
-        require(to != address(0), "BEP1155: transfer to the zero address");
+        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(to != address(0), "ERC1155: transfer to the zero address");
 
         address operator = msg.sender;
 
@@ -179,7 +179,7 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
             uint amount = amounts[i];
 
             uint fromBalance = _balances[id][from];
-            require(fromBalance >= amount, "BEP1155: insufficient balance for transfer");
+            require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
             unchecked {
                 _balances[id][from] = fromBalance - amount;
             }
@@ -192,7 +192,7 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
     }
 
     function _setApprovalForAll(address owner, address operator, bool approved) internal virtual {
-        require(owner != operator, "BEP1155: setting approval status for self");
+        require(owner != operator, "ERC1155: setting approval status for self");
         _operatorApprovals[owner][operator] = approved;
         emit ApprovalForAll(owner, operator, approved);
     }
@@ -215,14 +215,14 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try IBEP1155Receiver(to).onBEP1155Received(operator, from, id, amount, data) returns (bytes4 response) {
-                if (response != IBEP1155Receiver.onBEP1155Received.selector) {
-                    revert("BEP1155: BEP1155Receiver rejected tokens");
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("BEP1155: transfer to non BEP1155Receiver implementer");
+                revert("ERC1155: transfer to non ERC1155Receiver implementer");
             }
         }
     }
@@ -236,16 +236,16 @@ contract BEP1155 is IBEP1155, IBEP1155MetadataURI, BEP1155Storage {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try IBEP1155Receiver(to).onBEP1155BatchReceived(operator, from, ids, amounts, data) returns (
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
                 bytes4 response
             ) {
-                if (response != IBEP1155Receiver.onBEP1155BatchReceived.selector) {
-                    revert("BEP1155: BEP1155Receiver rejected tokens");
+                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
+                    revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("BEP1155: transfer to non BEP1155Receiver implementer");
+                revert("ERC1155: transfer to non ERC1155Receiver implementer");
             }
         }
     }

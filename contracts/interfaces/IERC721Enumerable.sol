@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-import "./IBEP721.sol";
+import "./IERC721.sol";
 
-interface IBEP721Enumerable is IBEP721 {
+interface IERC721Enumerable is IERC721 {
     function totalSupply() external view returns (uint);
     function tokenOfOwnerByIndex(address owner, uint index) external view returns (uint tokenId);
     function tokenByIndex(uint index) external view returns (uint);

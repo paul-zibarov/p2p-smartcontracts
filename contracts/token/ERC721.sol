@@ -1,20 +1,20 @@
 //SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
-import "../interfaces/IBEP721.sol";
-import "../interfaces/IBEP721Enumerable.sol";
-import "../interfaces/IBEP721Metadata.sol";
-import "../storage/BEP721Storage.sol";
+import "../interfaces/IERC721.sol";
+import "../interfaces/IERC721Enumerable.sol";
+import "../interfaces/IERC721Metadata.sol";
+import "../storage/ERC721Storage.sol";
 
-contract BEP721 is IBEP721, IBEP721Metadata, BEP721Storage {
+contract ERC721 is IERC721, IERC721Metadata, ERC721Storage {
 
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
     event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
     modifier onlyTokenOwner(uint tokenId) {
-        require(msg.sender == ownerOf(tokenId), "BEP721: msg sender is not an owner of token");
+        require(msg.sender == ownerOf(tokenId), "ERC721: msg sender is not an owner of token");
         _;
     }
 
@@ -37,37 +37,37 @@ contract BEP721 is IBEP721, IBEP721Metadata, BEP721Storage {
 
 
     function balanceOf(address owner) public view virtual override returns (uint) {
-        require(owner != address(0), "BEP721: balance query for the zero address");
+        require(owner != address(0), "ERC721: balance query for the zero address");
         return _balances[owner];
     }
 
     function ownerOf(uint tokenId) public view virtual override returns (address) {
         address owner = _owners[tokenId];
-        require(owner != address(0), "BEP721: owner query for nonexistent token");
+        require(owner != address(0), "ERC721: owner query for nonexistent token");
         return owner;
     }
 
 
     function approve(address to, uint tokenId) public virtual override {
-        address owner = BEP721.ownerOf(tokenId);
-        require(to != owner, "BEP721: approval to current owner");
+        address owner = ERC721.ownerOf(tokenId);
+        require(to != owner, "ERC721: approval to current owner");
 
         require(
             msg.sender == owner || isApprovedForAll(owner, msg.sender),
-            "BEP721: approve caller is not owner nor approved for all"
+            "ERC721: approve caller is not owner nor approved for all"
         );
 
         _approve(to, tokenId);
     }
 
     function getApproved(uint tokenId) public view virtual override returns (address) {
-        require(_exists(tokenId), "BEP721: approved query for nonexistent token");
+        require(_exists(tokenId), "ERC721: approved query for nonexistent token");
 
         return _tokenApprovals[tokenId];
     }
 
     function setApprovalForAll(address operator, bool approved) public virtual override {
-        require(operator != msg.sender, "BEP721: approve to caller");
+        require(operator != msg.sender, "ERC721: approve to caller");
 
         _operatorApprovals[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
@@ -80,13 +80,13 @@ contract BEP721 is IBEP721, IBEP721Metadata, BEP721Storage {
 
 
     function transferFrom(address from, address to, uint tokenId) public virtual override {
-        require(_isApprovedOrOwner(msg.sender, tokenId), "BEP721: transfer caller is not owner nor approved");
+        require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: transfer caller is not owner nor approved");
 
         _transfer(from, to, tokenId);
     }
 
     function safeTransferFrom(address from, address to, uint tokenId) public virtual override {
-        require(_isApprovedOrOwner(msg.sender, tokenId), "BEP721: transfer caller is not owner nor approved");
+        require(_isApprovedOrOwner(msg.sender, tokenId), "ERC721: transfer caller is not owner nor approved");
         _safeTransfer(from, to, tokenId);
     }
 
@@ -106,8 +106,8 @@ contract BEP721 is IBEP721, IBEP721Metadata, BEP721Storage {
     }
 
     function _mint(address to, uint tokenId) internal virtual {
-        require(to != address(0), "BEP721: mint to the zero address");
-        require(!_exists(tokenId), "BEP721: token already minted");
+        require(to != address(0), "ERC721: mint to the zero address");
+        require(!_exists(tokenId), "ERC721: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
@@ -130,8 +130,8 @@ contract BEP721 is IBEP721, IBEP721Metadata, BEP721Storage {
     }
 
     function _transfer(address from, address to, uint tokenId) internal virtual {
-        require(BEP721.ownerOf(tokenId) == from, "BEP721: transfer of token that is not own");
-        require(to != address(0), "BEP721: transfer to the zero address");
+        require(ERC721.ownerOf(tokenId) == from, "ERC721: transfer of token that is not own");
+        require(to != address(0), "ERC721: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -146,12 +146,12 @@ contract BEP721 is IBEP721, IBEP721Metadata, BEP721Storage {
 
     function _approve(address to, uint tokenId) internal virtual {
         _tokenApprovals[tokenId] = to;
-        emit Approval(BEP721.ownerOf(tokenId), to, tokenId);
+        emit Approval(ERC721.ownerOf(tokenId), to, tokenId);
     }
     
     function _isApprovedOrOwner(address spender, uint tokenId) internal view virtual returns (bool) {
-        require(_exists(tokenId), "BEP721: operator query for nonexistent token");
-        address owner = BEP721.ownerOf(tokenId);
+        require(_exists(tokenId), "ERC721: operator query for nonexistent token");
+        address owner = ERC721.ownerOf(tokenId);
         return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
     }
 

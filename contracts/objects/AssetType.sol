@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 enum AssetType {
-    BEP20,
-    BEP721,
-    BEP1155
+    ERC20,
+    ERC721,
+    ERC1155
 }

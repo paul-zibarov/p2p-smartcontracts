@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import "../utils/Ownable.sol";
 
-contract BEP20 is Ownable {
+contract ERC20 is Ownable {
 
     string public _name;
     string public _symbol;
@@ -53,7 +53,7 @@ contract BEP20 is Ownable {
     
     function transferFrom(address sender, address recipient, uint amount) external returns (bool) {
         uint allowed = _allowances[sender][msg.sender];
-        require(allowed >= amount, "SnakeBEP20: transfer amount exceeds allowance");
+        require(allowed >= amount, "ERC20: transfer amount exceeds allowance");
 
         if (allowed < type(uint).max) {
             unchecked {
@@ -81,13 +81,13 @@ contract BEP20 is Ownable {
     }
 
     function mintTo(address account, uint amount) external onlyOwner { 
-        require(account != address(0), "SnakeBEP20: mint to the zero address");
+        require(account != address(0), "ERC20: mint to the zero address");
         _mint(account, amount);
     }
 
     function burn(uint amount) external onlyOwner {
         uint accountBalance = _balances[msg.sender];
-        require(accountBalance >= amount, "SnakeBEP20: burn amount exceeds balance");
+        require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
 
         _balances[msg.sender] -= amount;
         _totalSupply -= amount;
@@ -96,8 +96,8 @@ contract BEP20 is Ownable {
 
 
     function _transfer(address sender, address recipient, uint amount) internal {
-        require(sender != address(0), "SnakeBEP20: transfer from the zero address");
-        require(recipient != address(0), "SnakeBEP20: transfer to the zero address");
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
 
         _balances[sender] -= amount;
         _balances[recipient] += amount;
@@ -105,15 +105,15 @@ contract BEP20 is Ownable {
     }
 
     function _approve(address owner, address spender, uint amount) internal {
-        require(owner != address(0), "SnakeBEP20: approve from the zero address");
-        require(spender != address(0), "SnakeBEP20: approve to the zero address");
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
     function _mint(address account, uint amount) internal { 
-        require(amount > 0, "SnakeBEP20: Zero mint amount");
+        require(amount > 0, "ERC20: Zero mint amount");
 
         _balances[account] += amount;
         _totalSupply += amount;

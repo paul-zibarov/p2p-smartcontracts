@@ -17,7 +17,7 @@ task("pk", "Prints the list of accounts", async (taskArgs, hre) => {
 });
 
 module.exports = {
-  solidity: "0.8.9",
+  solidity: "0.8.10",
   defaultNetwork: "bscTestnet",
   networks: {
     bscTestnet: {
