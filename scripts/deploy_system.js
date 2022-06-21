@@ -1,13 +1,13 @@
-import { addresses } from "../addresses";
+const addresses = require('../addresses');
 
 const hre = require("hardhat");
 const fs = require('fs');
 
 async function main() {
-  await deployERC721("ERC721 Token", "T721");
-  await deployERC1155("ERC1155 Token", "T1155");
-  await deployERC20("ERC20 Token", "T20", "18", "1000000000000000000000000000");
-  await deployP2P();
+  // await deployERC721("ERC721 Token", "T721");
+  // await deployERC1155("ERC1155 Token", "T1155");
+  // await deployERC20("ERC20 Token", "T20", "18", "1000000000000000000000000000");
+  // await deployP2P();
 }
 
 async function deployERC721(name, symbol) {
@@ -19,9 +19,8 @@ async function deployERC721(name, symbol) {
   const tokenProxy = await ERC721Proxy.deploy(token.address);
   console.log("ERC721 Proxy address:", tokenProxy.address);
 
-  token = await ERC721.attach(tokenProxy.address);
-  token.initialize(name, symbol)
-
+  token = ERC721.attach(tokenProxy.address);
+  await token.initialize(name, symbol)
 }
 
 async function deployERC1155(name, symbol) {
@@ -33,7 +32,7 @@ async function deployERC1155(name, symbol) {
   const tokenProxy = await ERC1155Proxy.deploy(token.address);
   console.log("ERC1155 Proxy address:", tokenProxy.address);
 
-  token = await ERC1155.attach(tokenProxy.address);
+  token = ERC1155.attach(tokenProxy.address);
   await token.initialize(name, symbol);
 }
 
@@ -52,9 +51,9 @@ async function deployP2P() {
   let p2pProxy = await P2PProxy.deploy(p2p.address);
   console.log("P2P Proxy address:", p2pProxy.address);
   
-  p2p = await P2P.attach(p2pProxy.address);
-  await p2p.updateAllowedNFT(addresses.bep1155Proxy, true)
-  await p2p.updateAllowedNFT(addresses.bep721Proxy, true)
+  p2p = P2P.attach(p2pProxy.address);
+  await p2p.updateAllowedNFT(addresses.erc1155Proxy, true)
+  await p2p.updateAllowedNFT(addresses.erc721Proxy, true)
 }
 
 main().then(() => process.exit(0))
