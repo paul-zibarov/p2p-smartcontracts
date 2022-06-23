@@ -147,6 +147,18 @@ contract ERC1155 is IERC1155, IERC1155MetadataURI, ERC1155Storage {
         _safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
+    function setTokenURI(uint256 id, string memory uri_) external onlyOwner() {
+        _uris[id] = uri_;
+    }
+
+    function setCollectionName(string memory name_) external onlyOwner()  {
+        _name = name_;
+    }
+
+    function setCollectionSymbol(string memory symbol_) external onlyOwner()  {
+        _symbol = symbol_;
+    }
+
     function _safeTransferFrom(address from, address to, uint id, uint amount, bytes memory data) internal virtual {
         require(to != address(0), "ERC1155: transfer to the zero address");
 
